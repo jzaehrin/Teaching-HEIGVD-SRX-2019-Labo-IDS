@@ -288,7 +288,7 @@ alert tcp any any -> any any (msg:"Mon nom!"; content:"Rubinstein"; sid:4000015;
 
 ---
 
-**Reponse :**  
+**Reponse :**  Snort cherche, sur l'ensemble des requetes en TCP qu'il vera, le contenu "Rubinstein". Si ce contenu est trouvé, une alerte est levé avec "Mon nom!" comme message et la journalise.
 
 ---
 
@@ -302,7 +302,55 @@ sudo snort -c myrules.rules -i eth0
 
 ---
 
-**Reponse :**  
+**Reponse :** 
+
+```
+Running in IDS mode
+
+        --== Initializing Snort ==--
+Initializing Output Plugins!
+Initializing Preprocessors!
+Initializing Plug-ins!
+Parsing Rules file "myrules.rules"
+Tagged Packet Limit: 256
+Log directory = /var/log/snort
+
++++++++++++++++++++++++++++++++++++++++++++++++++++
+Initializing rule chains...
+1 Snort rules read
+    1 detection rules
+    0 decoder rules
+    0 preprocessor rules
+1 Option Chains linked into 1 Chain Headers
+0 Dynamic rules
++++++++++++++++++++++++++++++++++++++++++++++++++++
+
++-------------------[Rule Port Counts]---------------------------------------
+|             tcp     udp    icmp      ip
+|     src       0       0       0       0
+|     dst       0       0       0       0
+|     any       1       0       0       0
+|      nc       0       0       0       0
+|     s+d       0       0       0       0
++----------------------------------------------------------------------------
+[ Port Based Pattern Matching Memory ]
++-[AC-BNFA Search Info Summary]------------------------------
+| Instances        : 1
+| Patterns         : 1
+| Pattern Chars    : 7
+| Num States       : 7
+| Num Match States : 1
+| Memory           :   1.60Kbytes
+|   Patterns       :   0.04K
+|   Match Lists    :   0.09K
+|   Transitions    :   1.07K
++-------------------------------------------------
+pcap DAQ configured to passive.
+Acquiring network traffic from "eth0".
+Reload thread starting...
+Reload thread started, thread 0x7f58a55b9700 (2708)
+Decoding Ethernet
+```
 
 ---
 
@@ -312,7 +360,14 @@ Aller à un site web contenant votre nom ou votre mot clé que vous avez choisi 
 
 ---
 
-**Reponse :**  
+**Reponse :**  Lors qu'on le quit `snort`, nous voyons les statistiques de l'ensemble de la capture (nombre de paquet par type, alert, etc)
+
+```
+Action Stats:
+     Alerts:            1 (  0.047%)
+     Logged:            1 (  0.047%)
+     Passed:            0 (  0.000%)
+```
 
 ---
 
@@ -322,8 +377,15 @@ Aller au répertoire /var/log/snort. Ouvrir le fichier `alert`. Vérifier qu'il 
 
 ---
 
-**Reponse :**  
+**Reponse :**
 
+```
+[**] [1:4000015:1] Mon nom! [**]
+[Priority: 0] 
+04/04-11:03:19.621078 10.192.106.154:55832 -> 84.16.93.57:80
+TCP TTL:64 TOS:0x0 ID:17362 IpLen:20 DgmLen:180 DF
+***AP*** Seq: 0xB0E87E7C  Ack: 0xBA8A5601  Win: 0x1F6  TcpLen: 20
+```
 ---
 
 
@@ -339,6 +401,17 @@ Ecrire une règle qui journalise (sans alerter) un message à chaque fois que Wi
 
 **Reponse :**  
 
+```
+log tcp 10.192.106.154 any -> 91.198.174.192 any (sid:361000000;rev:1;)
+```
+
+Il a été journalisé dans le fichier de log présent dans `/var/log/snort/snort.log.xxxxx` et il est en format `pcap`.
+
+un exemple de log :
+```
+11:14:17.606657 IP dhcp-10-192-106-154.einet.ad.eivd.ch.54362 > text-lb.esams.wikimedia.org.https: Flags [S], seq 2080764993, win 64240, options [mss 1460,sackOK,TS val 564157896 ecr 0,nop,wscale 7], length 0
+```
+
 ---
 
 --
@@ -353,6 +426,24 @@ Ecrire une règle qui alerte à chaque fois que votre système reçoit un ping d
 
 **Reponse :**  
 
+```
+alert icmp any any -> 10.192.106.154 any (itype:8;sid:361000000;rev:1;msg:"Ping from outside detected!";)
+```
+
+Nous avons vérifié le type du protocole du ping `ECHO REQUEST` qui vaut la valeur 8.
+Nous l'utilisons dans la condition `itype`.
+L'alert est loggé dans le fichier `snort/alert`.
+
+Alert loggé :
+
+```
+[**] [1:361000000:1] Ping from outside detected! [**]
+[Priority: 0] 
+04/04-11:39:16.863598 10.192.104.187 -> 10.192.106.154
+ICMP TTL:63 TOS:0x0 ID:58812 IpLen:20 DgmLen:84 DF
+Type:8  Code:0  ID:27137   Seq:251  ECHO
+```
+
 ---
 
 --
@@ -366,6 +457,9 @@ Modifier votre règle pour que les pings soient détectés dans les deux sens.
 ---
 
 **Reponse :**  
+```
+alert icmp any any <> 10.192.106.154 any (sid:361000000;rev:1;msg:"Ping detected!";)
+```
 
 ---
 
@@ -380,7 +474,22 @@ Essayer d'écrire une règle qui Alerte qu'une tentative de session SSH a été 
 
 ---
 
-**Reponse :**  
+**Reponse :**
+
+```
+alert tcp any any -> 10.192.106.154 22 (flags:S+;sid:361000000;rev:1;msg:"A little nagger tried to connect via ssh! >.<";)
+```
+
+Snort alert pour le premier paquet d'une sequence sur le port 22 de la machine hôte.
+
+```
+[**] [1:361000000:1] A little nagger tried to connect via ssh! >.< [**]
+[Priority: 0] 
+04/04-11:49:36.874211 10.192.104.187:33916 -> 10.192.106.154:22
+TCP TTL:63 TOS:0x0 ID:62189 IpLen:20 DgmLen:60 DF
+******S* Seq: 0x3D83E4A0  Ack: 0x0  Win: 0x7210  TcpLen: 40
+TCP Options (5) => MSS: 1460 SackOK TS: 2696120803 0 NOP WS: 7
+```
 
 ---
 
