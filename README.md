@@ -288,7 +288,7 @@ alert tcp any any -> any any (msg:"Mon nom!"; content:"Rubinstein"; sid:4000015;
 
 ---
 
-**Reponse :**  Snort cherche, sur l'ensemble des requetes en TCP qu'il vera, le contenu "Rubinstein". Si ce contenu est trouvé, une alerte est levé avec "Mon nom!" comme message et la journalise.
+**Reponse :**  Snort cherche sur l'ensemble des requetes en TCP qu'il vera le contenu "Rubinstein". Si ce contenu est trouvé, une alerte est levée avec "Mon nom!" comme message, et il la journalise.
 
 ---
 
@@ -303,6 +303,10 @@ sudo snort -c myrules.rules -i eth0
 ---
 
 **Reponse :** 
+
+Tout d'abord, on peut voir le nombre de règles qui ont été chargées.
+Ensuite, un tableau représente ces règles selon la relation entre leur protocole et leur entrée/sortie. 
+Enfin, une séries de statistiques de démarrage d'après les règles chargées ainsi que sa configuration.
 
 ```
 Running in IDS mode
@@ -351,7 +355,6 @@ Reload thread starting...
 Reload thread started, thread 0x7f58a55b9700 (2708)
 Decoding Ethernet
 ```
-
 ---
 
 Aller à un site web contenant votre nom ou votre mot clé que vous avez choisi dans son text (il faudra chercher un peu pour trouver un site en http...). Ensuite, arrêter Snort avec `CTRL-C`.
@@ -360,7 +363,7 @@ Aller à un site web contenant votre nom ou votre mot clé que vous avez choisi 
 
 ---
 
-**Reponse :**  Lors qu'on le quit `snort`, nous voyons les statistiques de l'ensemble de la capture (nombre de paquet par type, alert, etc)
+**Reponse :**  Lors qu'on le quitte `snort`, nous voyons une série de statistiques sur l'ensemble des captures (nombre de paquets par type, protocole, alerts, etc.) ainsi que des statisiques propre à l'exécution de snort (consommation mémoire).
 
 ```
 Action Stats:
@@ -379,6 +382,13 @@ Aller au répertoire /var/log/snort. Ouvrir le fichier `alert`. Vérifier qu'il 
 
 **Reponse :**
 
+On peut voir le `UID` de la rule (4000015) ainsi que sa révision (1), suivi du message de l'alerte (Mon nom!).
+
+Ensuite, on observe une indication sur la priorité de cette alerte.
+
+La ligne suivante indique le moment auquel l'alerte a été émise, ainsi que la source et son port suivi de la destination et son port.
+
+Enfin, nous avons une séries d'informations concernant le paquet (dans ce cas TCP).
 ```
 [**] [1:4000015:1] Mon nom! [**]
 [Priority: 0] 
@@ -427,17 +437,20 @@ Ecrire une règle qui alerte à chaque fois que votre système reçoit un ping d
 **Reponse :**  
 
 ```
-alert icmp any any -> 10.192.106.154 any (itype:8;sid:361000000;rev:1;msg:"Ping from outside detected!";)
+alert icmp any any -> 10.192.106.154 any (itype:8;sid:361000001;rev:1;msg:"Ping from outside detected!";)
 ```
 
-Nous avons vérifié le type du protocole du ping `ECHO REQUEST` qui vaut la valeur 8.
+Nous avons vérifié le type du protocole du ping `ECHO REQUEST` qui vaut 8.
+
 Nous l'utilisons dans la condition `itype`.
+
 L'alert est loggé dans le fichier `snort/alert`.
+
 
 Alert loggé :
 
 ```
-[**] [1:361000000:1] Ping from outside detected! [**]
+[**] [1:361000001:1] Ping from outside detected! [**]
 [Priority: 0] 
 04/04-11:39:16.863598 10.192.104.187 -> 10.192.106.154
 ICMP TTL:63 TOS:0x0 ID:58812 IpLen:20 DgmLen:84 DF
@@ -458,7 +471,7 @@ Modifier votre règle pour que les pings soient détectés dans les deux sens.
 
 **Reponse :**  
 ```
-alert icmp any any <> 10.192.106.154 any (sid:361000000;rev:1;msg:"Ping detected!";)
+alert icmp any any <> 10.192.106.154 any (sid:361000002;rev:1;msg:"Ping detected!";)
 ```
 
 ---
@@ -477,13 +490,13 @@ Essayer d'écrire une règle qui Alerte qu'une tentative de session SSH a été 
 **Reponse :**
 
 ```
-alert tcp any any -> 10.192.106.154 22 (flags:S+;sid:361000000;rev:1;msg:"A little nagger tried to connect via ssh! >.<";)
+alert tcp any any -> 10.192.106.154 22 (flags:S+;sid:361000003;rev:1;msg:"A little nagger tried to connect via ssh! >.<";)
 ```
 
 Snort alert pour le premier paquet d'une sequence sur le port 22 de la machine hôte.
 
 ```
-[**] [1:361000000:1] A little nagger tried to connect via ssh! >.< [**]
+[**] [1:361000003:1] A little nagger tried to connect via ssh! >.< [**]
 [Priority: 0] 
 04/04-11:49:36.874211 10.192.104.187:33916 -> 10.192.106.154:22
 TCP TTL:63 TOS:0x0 ID:62189 IpLen:20 DgmLen:60 DF
