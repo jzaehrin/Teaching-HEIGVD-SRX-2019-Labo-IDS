@@ -363,7 +363,7 @@ Aller à un site web contenant votre nom ou votre mot clé que vous avez choisi 
 
 ---
 
-**Reponse :**  Lors qu'on le quitte `snort`, nous voyons une série de statistiques sur l'ensemble des captures (nombre de paquets par type, protocole, alerts, etc.) ainsi que des statisiques propre à l'exécution de snort (consommation mémoire).
+**Reponse :**  Lorsque nous quittons `snort`, nous voyons une série de statistiques sur l'ensemble des captures (nombre de paquets par type, protocole, alerts, etc.) ainsi que des statisiques propre à l'exécution de snort (consommation mémoire).
 
 ```
 Action Stats:
