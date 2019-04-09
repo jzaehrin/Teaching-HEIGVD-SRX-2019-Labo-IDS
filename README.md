@@ -503,7 +503,8 @@ Lancer Wireshark et faire une capture du trafic sur l'interface connectée au br
 
 ---
 
-**Reponse :**  
+**Reponse :** L'option `-r` permet de faire cela :
+```snort -r <pcap file>```
 
 ---
 
@@ -513,7 +514,7 @@ Utiliser l'option correcte de Snort pour analyser le fichier de capture Wireshar
 
 ---
 
-**Reponse :**  
+**Reponse :**  Snort va se comporter de la même façon qu'une exécution en temps réel. Il va donc générer les fichiers de log à l'identique (`alert` et `snort.log.XXXXX`).
 
 ---
 
